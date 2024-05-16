@@ -1,3 +1,5 @@
+package entidades;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -6,8 +8,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class Turno {
-
     private Integer id;
+    private Paciente paciente;
+    private Medico medico;
     private String tipoTurno;
-    private String especialidad;
 }

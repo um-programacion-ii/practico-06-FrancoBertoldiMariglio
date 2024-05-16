@@ -1,3 +1,5 @@
+package entidades;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +20,7 @@ public class Paciente implements Callable {
     private String obraSocial;
 
 
-    private Turno solicitarTurno(String tipoTurno, String especialidad) {
+    private Turno solicitarTurno(String tipoTurno, String especialidad, Paciente paciente) {
         return null;
     }
 
@@ -27,6 +29,7 @@ public class Paciente implements Callable {
     }
 
     private HashMap<Medicamento, Integer> comprarMedicamentos(Receta receta, Farmacia farmacia) {
+//        Turno turno = solicitarTurno("Consulta", "Clinica", this);
         return null;
     }
 
