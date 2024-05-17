@@ -1,3 +1,5 @@
+package entidades;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +9,6 @@ import lombok.Setter;
 @AllArgsConstructor
 
 public class Medicamento {
-
     private String nombre;
     private String laboratorio;
     private String droga;

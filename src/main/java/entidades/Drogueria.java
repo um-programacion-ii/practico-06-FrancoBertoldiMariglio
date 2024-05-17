@@ -1,15 +1,15 @@
-import lombok.AllArgsConstructor;
+package entidades;
+
+import dao.MedicamentoDAO;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class Drogueria {
 
     private List<Medicamento> medicamentoList = Arrays.asList(
@@ -19,6 +19,12 @@ public class Drogueria {
             new Medicamento("Keterolac", "Bayer", "Keterolac")
     );
 
+    public Drogueria() {
+        MedicamentoDAO medicamentoDAO = new MedicamentoDAO();
+        for (Medicamento medicamento : this.medicamentoList) {
+            medicamentoDAO.save(medicamento);
+        }
+    }
 
     public Optional<Medicamento> buscarMedicamento(String nombre) {
         return medicamentoList.stream().filter(medicamento -> medicamento.getNombre().equals(nombre)).findFirst();
