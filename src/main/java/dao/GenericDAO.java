@@ -8,10 +8,11 @@ import java.util.logging.Logger;
 public abstract class GenericDAO<T> {
     protected static final Logger LOGGER = Logger.getLogger(GenericDAO.class.getName());
     protected HashMap<Integer, T> tabla = new HashMap<>();
+    private Integer currentId = 0;
 
-    public void save(T entity, Integer id) throws NoSuchElementException {
+    public void save(T entity) throws NoSuchElementException {
         try {
-            tabla.put(id, entity);
+            tabla.put(currentId, entity);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error adding entity", e);
             throw new NoSuchElementException("Error adding entity", e);
@@ -48,6 +49,7 @@ public abstract class GenericDAO<T> {
                 throw new NoSuchElementException("No entity with ID " + id);
             }
             tabla.put(id, entity);
+
         } catch (NoSuchElementException e) {
             throw e;
         } catch (Exception e) {

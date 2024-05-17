@@ -1,6 +1,9 @@
 package servicios;
 
+import dao.MedicoDAO;
 import entidades.Medico;
+import entidades.Receta;
+import entidades.Turno;
 
 import java.util.*;
 
@@ -18,54 +21,71 @@ public class GestionMedicoService {
         return instance;
     }
 
-    public synchronized List<Medico> buscarMedicos(String especialidad, String tipoTurno) {
-        if ("particular".equals(tipoTurno)) {
-            return buscarMedicosParticulares(especialidad);
-        } else {
-            return buscarMedicosPorObraSocial(especialidad, tipoTurno);
+    public void inicializarMedicosPorEspecialidad() {
+        MedicoDAO medicoDAO = new MedicoDAO();
+        HashMap<Integer, Medico> medicosMap = medicoDAO.getAll();
+        List<Medico> medicos = new ArrayList<>(medicosMap.values());
+        for (Medico medico : medicos) {
+            String especialidad = medico.getEspecialidad();
+            Queue<Medico> medicosDeEspecialidad = medicosPorEspecialidad.computeIfAbsent(especialidad, k -> new LinkedList<>());
+            medicosDeEspecialidad.add(medico);
         }
     }
 
-    private List<Medico> buscarMedicosParticulares(String especialidad) {
-        List<Medico> medicosParticulares = listarMedicosParticulares();
-        medicosParticulares.removeIf(medico -> !medico.getEspecialidad().equals(especialidad));
-        return medicosParticulares;
+    public Medico buscarMedico(String especialidad, String tipoTurno) {
+        List<Medico> medicos = listarMedicosPorEspecialidad(especialidad);
+        if ("particular".equals(tipoTurno)) {
+            medicos = filtrarMedicosParticulares(medicos);
+        } else {
+            medicos = filtrarMedicosPorObraSocial(medicos, tipoTurno);
+        }
+        return medicos.isEmpty() ? null : medicos.getFirst();
     }
 
-    private List<Medico> buscarMedicosPorObraSocial(String especialidad, String obraSocial) {
-        List<Medico> medicosPorObraSocial = listarMedicosPorEspecialidadYObraSocial(especialidad, obraSocial);
-        return medicosPorObraSocial;
-    }
-
-    public synchronized List<Medico> listarMedicosPorEspecialidadYObraSocial(String especialidad, String obraSocial) {
+    public List<Medico> listarMedicosPorEspecialidad(String especialidad) {
         Queue<Medico> medicos = medicosPorEspecialidad.get(especialidad);
         if (medicos != null && !medicos.isEmpty()) {
-            List<Medico> medicosConObraSocial = new ArrayList<>();
-            for (Medico medico : medicos) {
-                if (medico.getObraSocial().equals(obraSocial)) {
-                    medicosConObraSocial.add(medico);
-                }
-            }
-            return medicosConObraSocial;
+            return new ArrayList<>(medicos);
         }
         return Collections.emptyList();
     }
 
-    public synchronized List<Medico> listarMedicosParticulares() {
+    public List<Medico> filtrarMedicosParticulares(List<Medico> medicos) {
         List<Medico> medicosParticulares = new ArrayList<>();
-        for (Queue<Medico> medicos : medicosPorEspecialidad.values()) {
-            for (Medico medico : medicos) {
-                if (medico.isAtiendeParticular()) {
-                    medicosParticulares.add(medico);
-                }
+        for (Medico medico : medicos) {
+            if (medico.isAtiendeParticular()) {
+                medicosParticulares.add(medico);
             }
         }
         return medicosParticulares;
     }
 
-    public synchronized void agregarMedico(Medico medico) {
+    public List<Medico> filtrarMedicosPorObraSocial(List<Medico> medicos, String obraSocial) {
+        List<Medico> medicosConObraSocial = new ArrayList<>();
+        for (Medico medico : medicos) {
+            if (medico.getObraSocial().equals(obraSocial)) {
+                medicosConObraSocial.add(medico);
+            }
+        }
+        return medicosConObraSocial;
+    }
+
+    public void agregarMedico(Medico medico) {
         String especialidad = medico.getEspecialidad();
         Queue<Medico> medicos = medicosPorEspecialidad.computeIfAbsent(especialidad, k -> new LinkedList<>());
         medicos.add(medico);
+        notifyAll();
+    }
+
+    public synchronized Optional<Receta> gestionarPaciente(Turno turno, Boolean obtenerReceta) {
+        try {
+            Optional<Receta> receta = turno.getMedico().atenderPaciente(turno.getPaciente(), obtenerReceta);
+            agregarMedico(turno.getMedico());
+            return receta;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("La espera fue interrumpida");
+        }
+        return Optional.empty();
     }
 }

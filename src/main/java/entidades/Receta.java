@@ -10,7 +10,6 @@ import java.util.HashMap;
 @Setter
 @AllArgsConstructor
 public class Receta {
-    private Integer id;
     private HashMap<Medicamento, Integer> medicamentoMap;
     private String indicaciones;
 }

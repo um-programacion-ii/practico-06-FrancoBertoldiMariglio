@@ -1,25 +1,38 @@
 package servicios;
 
-import entidades.Compra;
-import entidades.Drogueria;
-import entidades.Medicamento;
-import entidades.Pedido;
+import dao.MedicamentoDAO;
+import dao.PedidoDAO;
+import entidades.*;
 import excepciones.MedioDePagoNoAceptadoException;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class GestionFarmaciaService {
 
     private static GestionFarmaciaService instance;
+
+    @Getter
+    private final Farmacia farmacia;
+
+    @Getter
+    @Setter
     private Drogueria drogueria;
 
     private GestionFarmaciaService() {
+        MedicamentoDAO medicamentoDAO = new MedicamentoDAO();
+        HashMap<Integer, Medicamento> medicamentosMap = medicamentoDAO.getAll();
+        HashMap<Medicamento, Integer> medicamentoIntegerMap = new HashMap<>();
+        Random random = new Random();
+        for (Medicamento medicamento : medicamentosMap.values()) {
+            Integer cantidad = random.nextInt(10) + 1;
+            medicamentoIntegerMap.put(medicamento, cantidad);
+        }
+        ArrayList<String> medioDePagoList = new ArrayList<>(Arrays.asList("Efectivo", "Tarjeta de crédito", "Tarjeta de débito"));
+        Collections.shuffle(medioDePagoList);
+        ArrayList<String> selectedMedioDePagoList = (ArrayList<String>) medioDePagoList.subList(0, 2);
+        this.farmacia = new Farmacia(medicamentoIntegerMap, selectedMedioDePagoList);
     }
 
     public static GestionFarmaciaService getInstance() {
@@ -29,19 +42,12 @@ public class GestionFarmaciaService {
         return instance;
     }
 
-    public void setDrogueria(Drogueria drogueria) {
-        this.drogueria = drogueria;
-    }
-
-    public Drogueria getDrogueria() {
-        return drogueria;
-    }
-
-    public HashMap<Medicamento, Integer> darMedicamentos(Compra compra, HashMap<Medicamento, Integer> medicamentoMap, ArrayList<String> medioDePagoList) throws MedioDePagoNoAceptadoException {
-        if (!medioDePagoList.contains(compra.getMedioDePago())) {
+    public HashMap<Medicamento, Integer> darMedicamentos(Compra compra) throws MedioDePagoNoAceptadoException {
+        if (!this.farmacia.getMedioDePagoList().contains(compra.getMedioDePago())) {
             throw new MedioDePagoNoAceptadoException();
         }
 
+        HashMap<Medicamento, Integer> medicamentoDisponibles = farmacia.getMedicamentoMap();
         HashMap<Medicamento, Integer> medicamentosInsuficientes = new HashMap<>();
         HashMap<Medicamento, Integer> medicamentosParaDevolver = new HashMap<>();
 
@@ -49,15 +55,17 @@ public class GestionFarmaciaService {
             Medicamento medicamento = entry.getKey();
             Integer cantidadRequerida = entry.getValue();
 
-            if (!medicamentoMap.containsKey(medicamento) || medicamentoMap.get(medicamento) < cantidadRequerida) {
+            if (!medicamentoDisponibles.containsKey(medicamento) || medicamentoDisponibles.get(medicamento) < cantidadRequerida) {
                 medicamentosInsuficientes.put(medicamento, cantidadRequerida);
             } else {
                 medicamentosParaDevolver.put(medicamento, cantidadRequerida);
-                medicamentoMap.put(medicamento, medicamentoMap.get(medicamento) - cantidadRequerida);
+                medicamentoDisponibles.put(medicamento, medicamentoDisponibles.get(medicamento) - cantidadRequerida);
             }
         }
         if (!medicamentosInsuficientes.isEmpty()) {
             Pedido pedido = new Pedido(medicamentosInsuficientes);
+            PedidoDAO pedidoDAO = new PedidoDAO();
+            pedidoDAO.save(pedido);
             HashMap<Medicamento, Integer> medicamentosDrogueria = obtenerMedicamentosDeDrogueria(pedido);
             medicamentosParaDevolver.putAll(medicamentosDrogueria);
         }

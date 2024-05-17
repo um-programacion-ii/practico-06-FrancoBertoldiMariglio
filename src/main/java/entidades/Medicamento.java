@@ -9,7 +9,6 @@ import lombok.Setter;
 @AllArgsConstructor
 
 public class Medicamento {
-    private Integer id;
     private String nombre;
     private String laboratorio;
     private String droga;
