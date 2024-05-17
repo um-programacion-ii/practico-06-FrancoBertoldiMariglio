@@ -1,3 +1,5 @@
+package entidadesTest;
+
 import entidades.Drogueria;
 import entidades.Medicamento;
 import org.junit.jupiter.api.BeforeEach;
