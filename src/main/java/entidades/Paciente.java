@@ -59,7 +59,7 @@ public class Paciente implements Callable<Void> {
         if (optionalReceta.isPresent()) {
             Receta receta = optionalReceta.get();
             HashMap<Medicamento, Integer> medicamentosComprados = this.comprarMedicamentos(receta);
-            System.out.println("Paciente " + this.nombre + " " + this.apellido + " ha finalizado su turno. Compro los siguientes medicamentos: " + medicamentosComprados);
+            System.out.println("Paciente " + this.nombre + " " + this.apellido + " ha finalizado su turno. Compro los siguientes medicamentos: " + medicamentosComprados.toString());
         } else {
             System.out.println("Paciente " + this.nombre + " " + this.apellido + " ha finalizado su turno. No compro medicamentos.");
         }

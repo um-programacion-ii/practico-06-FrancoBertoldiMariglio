@@ -1,5 +1,6 @@
 package servicios;
 
+import dao.FarmaciaDAO;
 import dao.MedicamentoDAO;
 import dao.PedidoDAO;
 import entidades.*;
@@ -8,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class GestionFarmaciaService {
 
@@ -18,21 +21,28 @@ public class GestionFarmaciaService {
 
     @Getter
     @Setter
-    private Drogueria drogueria;
+    private Drogueria drogueria = new Drogueria();
 
     private GestionFarmaciaService() {
-        MedicamentoDAO medicamentoDAO = new MedicamentoDAO();
-        HashMap<Integer, Medicamento> medicamentosMap = medicamentoDAO.getAll();
+        List<Medicamento> medicamentoList = Arrays.asList(
+            new Medicamento("Sertal", "Bayer", "Sertalina"),
+            new Medicamento("Bayaspirina", "Bayer", "Aspirina"),
+            new Medicamento("Geniol", "Bayer", "Paracetamol"),
+            new Medicamento("Keterolac", "Bayer", "Keterolac")
+        );
         HashMap<Medicamento, Integer> medicamentoIntegerMap = new HashMap<>();
         Random random = new Random();
-        for (Medicamento medicamento : medicamentosMap.values()) {
+        for (Medicamento medicamento : medicamentoList) {
             Integer cantidad = random.nextInt(10) + 1;
             medicamentoIntegerMap.put(medicamento, cantidad);
         }
         ArrayList<String> medioDePagoList = new ArrayList<>(Arrays.asList("Efectivo", "Tarjeta de crédito", "Tarjeta de débito"));
-        Collections.shuffle(medioDePagoList);
-        ArrayList<String> selectedMedioDePagoList = (ArrayList<String>) medioDePagoList.subList(0, 2);
+        ArrayList<String> selectedMedioDePagoList = IntStream.range(0, 2)
+                .mapToObj(medioDePagoList::get)
+                .collect(Collectors.toCollection(ArrayList::new));
         this.farmacia = new Farmacia(medicamentoIntegerMap, selectedMedioDePagoList);
+        FarmaciaDAO farmaciaDAO = new FarmaciaDAO();
+        farmaciaDAO.save(this.farmacia);
     }
 
     public static GestionFarmaciaService getInstance() {
@@ -43,33 +53,35 @@ public class GestionFarmaciaService {
     }
 
     public HashMap<Medicamento, Integer> darMedicamentos(Compra compra) throws MedioDePagoNoAceptadoException {
-        if (!this.farmacia.getMedioDePagoList().contains(compra.getMedioDePago())) {
-            throw new MedioDePagoNoAceptadoException();
-        }
-
-        HashMap<Medicamento, Integer> medicamentoDisponibles = farmacia.getMedicamentoMap();
-        HashMap<Medicamento, Integer> medicamentosInsuficientes = new HashMap<>();
-        HashMap<Medicamento, Integer> medicamentosParaDevolver = new HashMap<>();
-
-        for (Map.Entry<Medicamento, Integer> entry : compra.getMedicamentoMap().entrySet()) {
-            Medicamento medicamento = entry.getKey();
-            Integer cantidadRequerida = entry.getValue();
-
-            if (!medicamentoDisponibles.containsKey(medicamento) || medicamentoDisponibles.get(medicamento) < cantidadRequerida) {
-                medicamentosInsuficientes.put(medicamento, cantidadRequerida);
-            } else {
-                medicamentosParaDevolver.put(medicamento, cantidadRequerida);
-                medicamentoDisponibles.put(medicamento, medicamentoDisponibles.get(medicamento) - cantidadRequerida);
+        synchronized (this) {
+            if (!this.farmacia.getMedioDePagoList().contains(compra.getMedioDePago())) {
+                throw new MedioDePagoNoAceptadoException();
             }
+
+            HashMap<Medicamento, Integer> medicamentoDisponibles = farmacia.getMedicamentoMap();
+            HashMap<Medicamento, Integer> medicamentosInsuficientes = new HashMap<>();
+            HashMap<Medicamento, Integer> medicamentosParaDevolver = new HashMap<>();
+
+            for (Map.Entry<Medicamento, Integer> entry : compra.getMedicamentoMap().entrySet()) {
+                Medicamento medicamento = entry.getKey();
+                Integer cantidadRequerida = entry.getValue();
+
+                if (!medicamentoDisponibles.containsKey(medicamento) || medicamentoDisponibles.get(medicamento) < cantidadRequerida) {
+                    medicamentosInsuficientes.put(medicamento, cantidadRequerida);
+                } else {
+                    medicamentosParaDevolver.put(medicamento, cantidadRequerida);
+                    medicamentoDisponibles.put(medicamento, medicamentoDisponibles.get(medicamento) - cantidadRequerida);
+                }
+            }
+            if (!medicamentosInsuficientes.isEmpty()) {
+                Pedido pedido = new Pedido(medicamentosInsuficientes);
+                PedidoDAO pedidoDAO = new PedidoDAO();
+                pedidoDAO.save(pedido);
+                HashMap<Medicamento, Integer> medicamentosDrogueria = obtenerMedicamentosDeDrogueria(pedido);
+                medicamentosParaDevolver.putAll(medicamentosDrogueria);
+            }
+            return medicamentosParaDevolver;
         }
-        if (!medicamentosInsuficientes.isEmpty()) {
-            Pedido pedido = new Pedido(medicamentosInsuficientes);
-            PedidoDAO pedidoDAO = new PedidoDAO();
-            pedidoDAO.save(pedido);
-            HashMap<Medicamento, Integer> medicamentosDrogueria = obtenerMedicamentosDeDrogueria(pedido);
-            medicamentosParaDevolver.putAll(medicamentosDrogueria);
-        }
-        return medicamentosParaDevolver;
     }
 
 

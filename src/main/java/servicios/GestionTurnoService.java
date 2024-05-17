@@ -24,13 +24,14 @@ public class GestionTurnoService {
     }
 
     public Turno darTurno(String tipoTurno, String especialidad, Paciente paciente) {
-        synchronized (this.gestionMedicoService){
+        synchronized (this.gestionMedicoService) {
             gestionMedicoService.inicializarMedicosPorEspecialidad();
-            Medico medico = gestionMedicoService.buscarMedico(especialidad, tipoTurno);
+            Medico medico = gestionMedicoService.buscarMedico(especialidad, tipoTurno, paciente.getObraSocial());
             while (medico == null) {
                 try {
+                    System.out.println("No hay médicos disponibles para la especialidad " + especialidad + " y el tipo de turno " + tipoTurno + " de la obra social " + paciente.getObraSocial() + ". Esperando...");
                     wait();
-                    medico = gestionMedicoService.buscarMedico(especialidad, tipoTurno);
+                    medico = gestionMedicoService.buscarMedico(especialidad, tipoTurno, paciente.getObraSocial());
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     System.out.println("La espera fue interrumpida");
@@ -44,6 +45,8 @@ public class GestionTurnoService {
     }
 
     public synchronized Optional<Receta> gestionarTurno(Turno turno, Boolean obtenerReceta) {
-        return gestionMedicoService.gestionarPaciente(turno, obtenerReceta);
+        synchronized (this.gestionMedicoService) {
+            return gestionMedicoService.gestionarPaciente(turno, obtenerReceta);
+        }
     }
 }

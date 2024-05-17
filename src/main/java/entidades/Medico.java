@@ -6,11 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Getter
 @Setter
@@ -24,7 +20,7 @@ public class Medico {
 
     public Optional<Receta> atenderPaciente(Paciente paciente, Boolean obtenerReceta) throws InterruptedException {
         System.out.println("El medico " + this.nombre + " " + this.apellido + " esta atendiendo al paciente " + paciente.getNombre() + " " + paciente.getApellido());
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         if (obtenerReceta) {
             HashMap<Medicamento, Integer> medicamentoMap = getMedicamentoIntegerHashMap();
             String indicaciones = "Tomar los medicamentos cada " + (new Random().nextInt(3) + 1) + " horas";
@@ -36,13 +32,16 @@ public class Medico {
         return Optional.empty();
     }
 
-    private static HashMap<Medicamento, Integer> getMedicamentoIntegerHashMap() {
-        MedicamentoDAO medicamentoDAO = new MedicamentoDAO();
-        HashMap<Integer, Medicamento> medicamentos = medicamentoDAO.getAll();
-        List<Medicamento> medicamentoList = new ArrayList<>(medicamentos.values());
+    private HashMap<Medicamento, Integer> getMedicamentoIntegerHashMap() {
+        List<Medicamento> medicamentoList = Arrays.asList(
+            new Medicamento("Sertal", "Bayer", "Sertalina"),
+            new Medicamento("Bayaspirina", "Bayer", "Aspirina"),
+            new Medicamento("Geniol", "Bayer", "Paracetamol"),
+            new Medicamento("Keterolac", "Bayer", "Keterolac")
+        );
         HashMap<Medicamento, Integer> medicamentoMap = new HashMap<>();
         Random random = new Random();
-        int numMedicamentos = random.nextInt(medicamentoList.size());
+        int numMedicamentos = random.nextInt(medicamentoList.size()) + 1;
 
         for (int i = 0; i < numMedicamentos; i++) {
             Medicamento medicamento = medicamentoList.get(random.nextInt(medicamentoList.size()));

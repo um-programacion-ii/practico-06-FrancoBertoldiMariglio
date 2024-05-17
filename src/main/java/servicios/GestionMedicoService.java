@@ -22,9 +22,7 @@ public class GestionMedicoService {
     }
 
     public void inicializarMedicosPorEspecialidad() {
-        MedicoDAO medicoDAO = new MedicoDAO();
-        HashMap<Integer, Medico> medicosMap = medicoDAO.getAll();
-        List<Medico> medicos = new ArrayList<>(medicosMap.values());
+        List<Medico> medicos = crearMedicos();
         for (Medico medico : medicos) {
             String especialidad = medico.getEspecialidad();
             Queue<Medico> medicosDeEspecialidad = medicosPorEspecialidad.computeIfAbsent(especialidad, k -> new LinkedList<>());
@@ -32,12 +30,35 @@ public class GestionMedicoService {
         }
     }
 
-    public Medico buscarMedico(String especialidad, String tipoTurno) {
+    private List<Medico> crearMedicos() {
+        Medico medico1 = new Medico("Especialidad1", "Medico1", "Apellido1", true, "ObraSocial1");
+        Medico medico2 = new Medico("Especialidad2", "Medico2", "Apellido2", false, "ObraSocial1");
+        Medico medico3 = new Medico("Especialidad1", "Medico3", "Apellido3", true, "ObraSocial2");
+        Medico medico4 = new Medico("Especialidad2", "Medico4", "Apellido4", false, "ObraSocial2");
+        Medico medico5 = new Medico("Especialidad1", "Medico5", "Apellido5", true, "ObraSocial1");
+        Medico medico6 = new Medico("Especialidad2", "Medico6", "Apellido6", false, "ObraSocial1");
+        Medico medico7 = new Medico("Especialidad1", "Medico7", "Apellido7", true, "ObraSocial2");
+        Medico medico8 = new Medico("Especialidad2", "Medico8", "Apellido8", false, "ObraSocial2");
+
+        MedicoDAO medicoDAO = new MedicoDAO();
+        medicoDAO.save(medico1);
+        medicoDAO.save(medico2);
+        medicoDAO.save(medico3);
+        medicoDAO.save(medico4);
+        medicoDAO.save(medico5);
+        medicoDAO.save(medico6);
+        medicoDAO.save(medico7);
+        medicoDAO.save(medico8);
+
+        return new ArrayList<>(Arrays.asList(medico1, medico2, medico3, medico4, medico5, medico6, medico7, medico8));
+    }
+
+    public Medico buscarMedico(String especialidad, String tipoTurno, String obraSocial) {
         List<Medico> medicos = listarMedicosPorEspecialidad(especialidad);
         if ("particular".equals(tipoTurno)) {
             medicos = filtrarMedicosParticulares(medicos);
         } else {
-            medicos = filtrarMedicosPorObraSocial(medicos, tipoTurno);
+            medicos = filtrarMedicosPorObraSocial(medicos, obraSocial);
         }
         return medicos.isEmpty() ? null : medicos.getFirst();
     }

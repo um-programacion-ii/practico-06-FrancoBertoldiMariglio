@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class GenericDAO<T> {
+public class GenericDAO<T> {
     protected static final Logger LOGGER = Logger.getLogger(GenericDAO.class.getName());
     protected HashMap<Integer, T> tabla = new HashMap<>();
     private Integer currentId = 0;

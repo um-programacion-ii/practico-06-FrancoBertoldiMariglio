@@ -25,25 +25,6 @@ public class Clinica {
         Paciente paciente13 = new Paciente("Francisco", "Romero", "78901234", 90, "ObraSocial1", "TipoTurno1", "Especialidad1", true);
         Paciente paciente14 = new Paciente("Carmen", "Vargas", "43210987", 95, "ObraSocial2", "TipoTurno2", "Especialidad2", false);
 
-        Medico medico1 = new Medico("Especialidad1", "Medico1", "Apellido1", true, "ObraSocial1");
-        Medico medico2 = new Medico("Especialidad2", "Medico2", "Apellido2", false, "ObraSocial1");
-        Medico medico3 = new Medico("Especialidad1", "Medico3", "Apellido3", true, "ObraSocial2");
-        Medico medico4 = new Medico("Especialidad2", "Medico4", "Apellido4", false, "ObraSocial2");
-        Medico medico5 = new Medico("Especialidad1", "Medico5", "Apellido5", true, "ObraSocial1");
-        Medico medico6 = new Medico("Especialidad2", "Medico6", "Apellido6", false, "ObraSocial1");
-        Medico medico7 = new Medico("Especialidad1", "Medico7", "Apellido7", true, "ObraSocial2");
-        Medico medico8 = new Medico("Especialidad2", "Medico8", "Apellido8", false, "ObraSocial2");
-
-        MedicoDAO medicoDAO = new MedicoDAO();
-        medicoDAO.save(medico1);
-        medicoDAO.save(medico2);
-        medicoDAO.save(medico3);
-        medicoDAO.save(medico4);
-        medicoDAO.save(medico5);
-        medicoDAO.save(medico6);
-        medicoDAO.save(medico7);
-        medicoDAO.save(medico8);
-
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
         Future<Void> future1 = executor.submit(paciente1);
